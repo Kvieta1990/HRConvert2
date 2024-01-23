@@ -469,8 +469,8 @@ function verifyGlobals() {
   $ConsolidatedLogFile = $ConvertTempDir.$ConsolidatedLogFileName;
   // / Format related variables.
   $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationArray = $ImageArray = $MediaArray = $VideoArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleArray = $PDFWorkArr = array();
-  if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
-  if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
+  if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = array('zip', 'tar', '7z', 'iso');
+  if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = array('zip', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz');
   if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf');
   if (in_array('Document', $SupportedConversionTypes)) $SpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
   if (in_array('Document', $SupportedConversionTypes)) $PresentationArray = array('pages', 'pptx', 'ppt', 'xps', 'potx', 'potm', 'pot', 'ppa', 'odp');
@@ -1021,7 +1021,6 @@ function convertArchives($pathname, $newPathname, $extension) {
   $arrayzipo = array('zip');
   $array7zo2 = array('vhd', 'vdi', 'iso');
   $arraytaro = array('tar.gz', 'tar.bz2', 'tar');
-  $arrayraro = array('rar');
   $stopper = 0;
   $sleepTime = $SleepTimer;
   $oldExtension =  pathinfo($pathname, $PathExt);
@@ -1040,7 +1039,6 @@ function convertArchives($pathname, $newPathname, $extension) {
   if (in_array(strtolower($oldExtension), $arrayzipo)) $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2);
   if (in_array(strtolower($oldExtension), $array7zo)) $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2);
   if (in_array(strtolower($oldExtension), $array7zo2)) $returnData = shell_exec('7z x -y '.$pathname.' -o'.$safedir2);
-  if (in_array(strtolower($oldExtension), $arrayraro)) $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2);
   if (in_array(strtolower($oldExtension), $arraytaro)) $returnData = shell_exec('7z x -aoa '.$pathname.' -o'.$safedir2);
   if ($Verbose) logEntry('The extractor returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
   if ($Verbose) logEntry('Archiving file '.$safedir2.' to '.$newPathname.'.');
@@ -1104,21 +1102,6 @@ function convertArchives($pathname, $newPathname, $extension) {
       if ($stopper === $StopCounter) {
         $ConversionErrors = TRUE;
         errorEntry('The archiver timed out!', 13004, FALSE); } } }
-  // / Code to rearchive archive files using rar.
-  if (in_array($extension, $arrayraro)) {
-    // / This code will attempt the archive operation up to $StopCounter number of times.
-    while ($stopper <= $StopCounter) {
-      // / If the last conversion attempt failed, wait a moment before trying again.
-      if ($stopper !== 0) sleep($sleepTime++);
-      // / Attempt the conversion.
-      $returnData = shell_exec('rar a -ep1 -r '.$newPathname.' '.$safedir2);
-      if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-    // / Stop attempting the archive operation after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) {
-        $ConversionErrors = TRUE;
-        errorEntry('The archiver timed out!', 13005, FALSE); } } }
   // / Check if any errors occurred.
   if (!file_exists($newPathname)) { 
     $ConversionErrors = TRUE;
@@ -1127,8 +1110,8 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / Code to clean up temporary files & directories.
   cleanFiles($safedir2);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $filename = $safedir2 = $safedir3 = $safedir4 = $oldExtension = $returnData = $pathname = $newPathname = $extension = $array7zo = $arrayzipo = $array7zo2 = $arraytaro = $arrayraro = $sleepTime = NULL;
-  unset($filename, $safedir2, $safedir3, $safedir4, $oldExtension, $returnData, $pathname, $newPathname, $extension, $array7zo, $arrayzipo, $array7zo2, $arraytaro, $arrayraro, $sleepTime);
+  $filename = $safedir2 = $safedir3 = $safedir4 = $oldExtension = $returnData = $pathname = $newPathname = $extension = $array7zo = $arrayzipo = $array7zo2 = $arraytaro = $sleepTime = NULL;
+  unset($filename, $safedir2, $safedir3, $safedir4, $oldExtension, $returnData, $pathname, $newPathname, $extension, $array7zo, $arrayzipo, $array7zo2, $arraytaro, $sleepTime);
   return array($ConversionSuccess, $ConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -1422,7 +1405,6 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = '';
-  $rararr = array('rar');
   $ziparr = array('zip');
   $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2');
   $isoarr = array('iso');
@@ -1454,8 +1436,6 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 4002, TRUE);
       if ($virusFound) errorEntry('Virus detected!', 4003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }
-    // / Handle archiving of rar compatible files.
-    if (in_array($UserExtension, $rararr)) $returnData = shell_exec('rar a -ep '.$newPathname.' '.$pathname);
     // / Handle archiving of .zip compatible files.
     if (in_array($UserExtension, $ziparr)) $returnData = shell_exec('zip -j '.$newPathname.' '.$pathname);
     // / Handle archiving of 7zipper compatible files.
@@ -1470,8 +1450,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       $ArchiveComplete = TRUE;
       if ($Verbose) logEntry('Archived file '.$pathname.' to '.$ConvertTempDir.$file.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $rararr = $ziparr = $tararr = $isoarr = $pathname = $userFileName = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $variableIsSanitized = NULL;
-  unset ($file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $userFileName, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $variableIsSanitized); 
+  $file = $ziparr = $tararr = $isoarr = $pathname = $userFileName = $oldPathname = $newPathname = $scanComplete = $virusFound = $returnData = $variableIsSanitized = $fileIsVerified = $oldExtension = $clean = $copy = $skip = $variableIsSanitized = NULL;
+  unset ($file, $ziparr, $tararr, $isoarr, $pathname, $userFileName, $oldPathname, $newPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $variableIsSanitized); 
   return array($ArchiveComplete, $ArchiveErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -1492,12 +1472,11 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   $audioarray =  $MediaArray;
   $archarray = $ArchiveArray; 
   $pdfarray = array('pdf');
-  $array7z = array('7z', 'zip', 'rar', 'iso', 'vhd');
+  $array7z = array('7z', 'zip', 'iso', 'vhd');
   $array7zo = array('7z', 'zip');
   $arrayzipo = array('zip');
   $array7zo2 = array('vhd', 'iso');
   $arraytaro = array('tar.gz', 'tar.bz2', 'tar');
-  $arrayraro = array('rar');
   $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Drawing' => $drawingarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Stream' => $streamarray, 'Audio' => $audioarray, 'Archive' => $archarray);
   $arrKey = 0;
   $file = '';
@@ -1554,8 +1533,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       $MainConversionSuccess = TRUE;
       if ($Verbose) logEntry('Created a file at '.$newPathname.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  $file = $pathname = $oldPathname = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $streamarray = $modelarray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayraro = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = NULL;
-  unset ($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $streamarray, $modelarray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayraro, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported);
+  $file = $pathname = $oldPathname = $oldExtension= $newPathname = $docarray = $imgarray = $audioarray = $videoarray = $subtitleArray = $streamarray = $modelarray = $drawingarray = $pdfarray = $archarray = $array7z = $array7zo = $arrayzipo = $arraytaro = $arrayArray = $fileIsVerified = $scanComplete = $virusFound = $variableIsSanitized = $arrKey = $clean = $copy = $skip = $isExtensionSupported = NULL;
+  unset ($file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $streamarray, $modelarray, $drawingarray, $pdfarray, $archarray, $array7z, $array7zo, $arrayzipo, $arraytaro, $arrayArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported);
   return array($MainConversionSuccess, $MainConversionErrors); }
 // / -----------------------------------------------------------------------------------
 
